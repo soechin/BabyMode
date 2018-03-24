@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Speech.Synthesis;
 using System.Text;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -22,12 +21,12 @@ namespace BabyMode
     /// </summary>
     public partial class MainWindow : Window
     {
+        private bool _locked;
         private IntPtr _handle;
         private IntPtr _hookPtr;
         private User32.HookProc _hookProc;
         private Random _random;
         private SpeechSynthesizer _speech;
-        private Timer _timer;
 
         public MainWindow()
         {
@@ -36,38 +35,16 @@ namespace BabyMode
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            _locked = false;
             _handle = new WindowInteropHelper(this).Handle;
             _hookProc = new User32.HookProc(Window_HookProc);
-            _hookPtr = IntPtr.Zero;
+            _hookPtr = User32.SetWindowsHookEx(13/*WH_KEYBOARD_LL*/, _hookProc,
+                    User32.GetModuleHandle(null), 0);
             _random = new Random();
             _speech = new SpeechSynthesizer();
-            _timer = null;
 
             Left = SystemParameters.WorkArea.Right - Width;
             Top = SystemParameters.WorkArea.Bottom - Height;
-        }
-
-        public IntPtr Window_HookProc(int nCode, IntPtr wParam, IntPtr lParam)
-        {
-            if (wParam == (IntPtr)0x0100/*WM_KEYDOWN*/)
-            {
-                char c = User32.KeybdStructToAscii(lParam);
-
-                if (c != '\0')
-                {
-                    Dispatcher.Invoke(new Action(() =>
-                    {
-                        Unlock(c);
-                    }));
-                }
-            }
-
-            if (nCode < 0)
-            {
-                return User32.CallNextHookEx(_hookPtr, nCode, wParam, lParam);
-            }
-
-            return (IntPtr)1;
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -83,36 +60,55 @@ namespace BabyMode
                 _speech.Dispose();
                 _speech = null;
             }
-
-            if (_timer != null)
-            {
-                _timer.Dispose();
-                _timer = null;
-            }
         }
 
-        private void Timer_Elapsed(object state)
+        public IntPtr Window_HookProc(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (User32.GetWindowRect(_handle, out User32.RECT rect))
+            bool skip = false;
+
+            if (wParam == (IntPtr)0x0100/*WM_KEYDOWN*/)
             {
-                User32.ClipCursor(ref rect);
+                int ascii = User32.KeybdGetAscii(lParam, out int vkcode);
+
+                if (vkcode == 0x70/*VK_F1*/)
+                {
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        Lock();
+                    }));
+                }
+                else if (!_locked)
+                {
+                    skip = true;
+                }
+                else if (ascii != 0)
+                {
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        Input((char)ascii);
+                    }));
+                }
             }
+            else if (!_locked)
+            {
+                skip = true;
+            }
+
+            if (nCode < 0 || skip)
+            {
+                return User32.CallNextHookEx(_hookPtr, nCode, wParam, lParam);
+            }
+
+            return (IntPtr)1;
         }
 
         private void Lock()
         {
             string text = string.Empty;
 
-            if (_hookPtr == IntPtr.Zero)
-            {
-                _hookPtr = User32.SetWindowsHookEx(13/*WH_KEYBOARD_LL*/, _hookProc,
-                    User32.GetModuleHandle(null), 0);
-            }
-
-            if (_timer == null)
-            {
-                _timer = new Timer(Timer_Elapsed, null, 0, 1);
-            }
+            _locked = true;
+            User32.GetWindowRect(_handle, out User32.RECT rect);
+            User32.ClipCursor(ref rect);
 
             for (int i = 0; i < 4; i++)
             {
@@ -122,49 +118,44 @@ namespace BabyMode
             label.Content = text;
         }
 
-        public void Unlock(char c)
+        public void Unlock()
         {
             string text = label.Content as string;
 
-            if (IsLocked())
+            if (string.IsNullOrEmpty(text))
             {
-                if (_speech != null)
-                {
-                    _speech.SpeakAsyncCancelAll();
-                    _speech.SpeakAsync(c.ToString());
-                }
-
-                if (text[0] != c)
-                {
-                    Lock();
-                    return;
-                }
-
-                label.Content = text.Substring(1);
-            }
-
-            if (!IsLocked())
-            {
-                if (_hookPtr != IntPtr.Zero)
-                {
-                    User32.UnhookWindowsHookEx(_hookPtr);
-                    _hookPtr = IntPtr.Zero;
-                }
-
-                if (_timer != null)
-                {
-                    _timer.Dispose();
-                    _timer = null;
-
-                    User32.ClipCursor(IntPtr.Zero);
-                }
+                _locked = false;
+                User32.ClipCursor(IntPtr.Zero);
             }
         }
 
-        public bool IsLocked()
+        public void Input(char c)
         {
             string text = label.Content as string;
-            return !string.IsNullOrEmpty(text);
+
+            //if (!_locked)
+            //{
+            //    return;
+            //}
+
+            if (_speech != null)
+            {
+                _speech.SpeakAsyncCancelAll();
+                _speech.SpeakAsync(c.ToString());
+            }
+
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (text[0] == c)
+                {
+                    label.Content = text.Substring(1);
+                    Unlock();
+                }
+                else
+                {
+                    Lock();
+                }
+            }
         }
 
         private void ButtonL_Click(object sender, RoutedEventArgs e)
@@ -174,9 +165,7 @@ namespace BabyMode
 
         private void ButtonX_Click(object sender, RoutedEventArgs e)
         {
-            string text = label.Content as string;
-
-            if (string.IsNullOrEmpty(text))
+            if (!_locked)
             {
                 Close();
             }
@@ -184,52 +173,52 @@ namespace BabyMode
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('1');
+            Input('1');
         }
 
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('2');
+            Input('2');
         }
 
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('3');
+            Input('3');
         }
 
         private void Button4_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('4');
+            Input('4');
         }
 
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('5');
+            Input('5');
         }
 
         private void Button6_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('6');
+            Input('6');
         }
 
         private void Button7_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('7');
+            Input('7');
         }
 
         private void Button8_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('8');
+            Input('8');
         }
 
         private void Button9_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('9');
+            Input('9');
         }
 
         private void Button0_Click(object sender, RoutedEventArgs e)
         {
-            Unlock('0');
+            Input('0');
         }
     }
 }

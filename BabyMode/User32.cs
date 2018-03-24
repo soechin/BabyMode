@@ -60,19 +60,21 @@ namespace System
         [DllImport("user32.dll")]
         public static extern int ToAscii(int uVirtKey, int uScanCode, byte[] lpKeyState, out short lpChar, int uFlags);
 
-        public static char KeybdStructToAscii(IntPtr lParam)
+        public static int KeybdGetAscii(IntPtr lParam, out int vkcode)
         {
             KBDLLHOOKSTRUCT kbd = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
             byte[] buf = new byte[255];
             int ret;
 
+            vkcode = kbd.vkCode;
+
             if (GetKeyboardState(buf))
             {
                 ret = ToAscii(kbd.vkCode, kbd.scanCode, buf, out short val, 0);
-                if (ret == 1) return (char)val;
+                if (ret == 1) return val;
             }
 
-            return '\0';
+            return 0;
         }
     }
 }
