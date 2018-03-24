@@ -5,123 +5,172 @@
         xmlns:local="clr-namespace:BabyMode"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         AllowsTransparency="True"
+        Loaded="Window_Loaded"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         SizeToContent="WidthAndHeight"
+        TextInput="Window_TextInput"
         Topmost="True"
-        WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         mc:Ignorable="d">
     <Window.Background>
         <SolidColorBrush Opacity="0.1" Color="White" />
     </Window.Background>
+    <Window.Resources>
+        <Style x:Key="LabelStyle" TargetType="{x:Type Label}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <SolidColorBrush Opacity="0.25" Color="Pink" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground">
+                <Setter.Value>
+                    <SolidColorBrush Opacity="0.5" Color="Black" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <SolidColorBrush Opacity="0.5" Color="Gray" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="32" />
+        </Style>
+        <Style x:Key="ButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <SolidColorBrush Opacity="0.25" Color="Pink" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground">
+                <Setter.Value>
+                    <SolidColorBrush Opacity="0.5" Color="Black" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <SolidColorBrush Opacity="0.5" Color="Gray" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="FontSize" Value="32" />
+        </Style>
+    </Window.Resources>
     <Grid Margin="5">
-        <Grid.Resources>
-            <Style x:Key="LabelStyle" TargetType="{x:Type Label}">
-                <Setter Property="Background">
-                    <Setter.Value>
-                        <SolidColorBrush Opacity="0.25" Color="Pink" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="Foreground">
-                    <Setter.Value>
-                        <SolidColorBrush Opacity="0.5" Color="Black" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="BorderBrush">
-                    <Setter.Value>
-                        <SolidColorBrush Opacity="0.5" Color="Gray" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="FontSize" Value="32" />
-            </Style>
-            <Style x:Key="ButtonStyle" TargetType="{x:Type Button}">
-                <Setter Property="Background">
-                    <Setter.Value>
-                        <SolidColorBrush Opacity="0.25" Color="Pink" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="Foreground">
-                    <Setter.Value>
-                        <SolidColorBrush Opacity="0.5" Color="Black" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="BorderBrush">
-                    <Setter.Value>
-                        <SolidColorBrush Opacity="0.5" Color="Gray" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="FontSize" Value="32" />
-            </Style>
-        </Grid.Resources>
-        <Label Width="160"
+        <Label x:Name="label"
+               Width="160"
                HorizontalAlignment="Left"
                VerticalAlignment="Top"
-               Content="12345678"
+               HorizontalContentAlignment="Center"
+               VerticalContentAlignment="Center"
+               Content=""
                Style="{DynamicResource LabelStyle}" />
-        <Button Width="50"
+        <Button x:Name="button7"
+                Width="50"
                 Height="50"
                 Margin="0,57.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button7_Click"
                 Content="7"
                 Style="{DynamicResource ButtonStyle}" />
-        <Button Width="50"
+        <Button x:Name="button8"
+                Width="50"
                 Height="50"
                 Margin="55,57.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button8_Click"
                 Content="8"
                 Style="{DynamicResource ButtonStyle}" />
-        <Button Width="50"
+        <Button x:Name="button9"
+                Width="50"
                 Height="50"
                 Margin="110,57.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button9_Click"
                 Content="9"
                 Style="{DynamicResource ButtonStyle}" />
-        <Button Width="50"
+        <Button x:Name="button4"
+                Width="50"
                 Height="50"
                 Margin="0,112.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button4_Click"
                 Content="4"
                 Style="{DynamicResource ButtonStyle}" />
-        <Button Width="50"
+        <Button x:Name="button5"
+                Width="50"
                 Height="50"
                 Margin="55,112.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button5_Click"
                 Content="5"
                 Style="{DynamicResource ButtonStyle}" />
-        <Button Width="50"
+        <Button x:Name="button6"
+                Width="50"
                 Height="50"
                 Margin="110,112.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button6_Click"
                 Content="6"
                 Style="{DynamicResource ButtonStyle}" />
-        <Button Width="50"
+        <Button x:Name="button1"
+                Width="50"
                 Height="50"
                 Margin="0,167.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button1_Click"
                 Content="1"
                 Style="{DynamicResource ButtonStyle}" />
-        <Button Width="50"
+        <Button x:Name="button2"
+                Width="50"
                 Height="50"
                 Margin="55,167.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button2_Click"
                 Content="2"
                 Style="{DynamicResource ButtonStyle}" />
-        <Button Width="50"
+        <Button x:Name="button3"
+                Width="50"
                 Height="50"
                 Margin="110,167.64,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
+                Click="Button3_Click"
                 Content="3"
+                Style="{DynamicResource ButtonStyle}" />
+        <Button x:Name="button0"
+                Width="50"
+                Height="50"
+                Margin="0,223,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Click="Button0_Click"
+                Content="0"
+                Style="{DynamicResource ButtonStyle}" />
+        <Button x:Name="buttonL"
+                Width="50"
+                Height="50"
+                Margin="55,223,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Click="ButtonL_Click"
+                Content="L"
+                Style="{DynamicResource ButtonStyle}" />
+        <Button x:Name="buttonX"
+                Width="50"
+                Height="50"
+                Margin="110,223,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Click="ButtonX_Click"
+                Content="X"
                 Style="{DynamicResource ButtonStyle}" />
     </Grid>
 </Window>
