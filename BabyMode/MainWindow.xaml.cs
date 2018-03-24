@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Speech.Synthesis;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -23,6 +24,7 @@ namespace BabyMode
     {
         private IntPtr _handle;
         private Random _random;
+        private SpeechSynthesizer _speech;
         private Timer _timer;
 
         public MainWindow()
@@ -34,10 +36,26 @@ namespace BabyMode
         {
             _handle = new WindowInteropHelper(this).Handle;
             _random = new Random();
+            _speech = new SpeechSynthesizer();
             _timer = null;
 
             Left = SystemParameters.WorkArea.Right - Width;
             Top = SystemParameters.WorkArea.Bottom - Height;
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            if (_speech != null)
+            {
+                _speech.Dispose();
+                _speech = null;
+            }
+
+            if (_timer != null)
+            {
+                _timer.Dispose();
+                _timer = null;
+            }
         }
 
         private void Window_TextInput(object sender, TextCompositionEventArgs e)
@@ -47,8 +65,6 @@ namespace BabyMode
 
             foreach (char c in e.Text)
             {
-                Unlock(c);
-
                 if (c == '1') button = button1;
                 else if (c == '2') button = button2;
                 else if (c == '3') button = button3;
@@ -59,11 +75,16 @@ namespace BabyMode
                 else if (c == '8') button = button8;
                 else if (c == '9') button = button9;
                 else if (c == '0') button = button0;
-                else continue;
+                else button = null;
 
-                point = new Point(button.Width / 2, button.Height / 2);
-                point = button.PointToScreen(point);
-                User32.SetCursorPos((int)point.X, (int)point.Y);
+                if (IsLocked() && button != null)
+                {
+                    point = new Point(button.Width / 2, button.Height / 2);
+                    point = button.PointToScreen(point);
+                    User32.SetCursorPos((int)point.X, (int)point.Y);
+                }
+
+                Unlock(c);
             }
         }
 
@@ -97,18 +118,24 @@ namespace BabyMode
         {
             string text = label.Content as string;
 
-            if (!string.IsNullOrEmpty(text))
+            if (IsLocked())
             {
+                if (_speech != null)
+                {
+                    _speech.SpeakAsyncCancelAll();
+                    _speech.SpeakAsync(c.ToString());
+                }
+
                 if (text[0] != c)
                 {
                     Lock();
                     return;
                 }
 
-                text = text.Substring(1);
+                label.Content = text.Substring(1);
             }
 
-            if (string.IsNullOrEmpty(text))
+            if (!IsLocked())
             {
                 if (_timer != null)
                 {
@@ -118,8 +145,12 @@ namespace BabyMode
                     User32.ClipCursor(IntPtr.Zero);
                 }
             }
+        }
 
-            label.Content = text;
+        public bool IsLocked()
+        {
+            string text = label.Content as string;
+            return !string.IsNullOrEmpty(text);
         }
 
         private void ButtonL_Click(object sender, RoutedEventArgs e)

@@ -5,6 +5,7 @@
         xmlns:local="clr-namespace:BabyMode"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         AllowsTransparency="True"
+        Closed="Window_Closed"
         Loaded="Window_Loaded"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
