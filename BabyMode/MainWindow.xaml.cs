@@ -62,6 +62,21 @@ namespace BabyMode
             }
         }
 
+        private void Window_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_locked)
+            {
+                if (User32.GetWindowRect(_handle, out User32.RECT rect))
+                {
+                    User32.ClipCursor(ref rect);
+                }
+            }
+            else
+            {
+                User32.ClipCursor(IntPtr.Zero);
+            }
+        }
+
         public IntPtr Window_HookProc(int nCode, IntPtr wParam, IntPtr lParam)
         {
             bool skip = false;
@@ -107,8 +122,6 @@ namespace BabyMode
             string text = string.Empty;
 
             _locked = true;
-            User32.GetWindowRect(_handle, out User32.RECT rect);
-            User32.ClipCursor(ref rect);
 
             for (int i = 0; i < 4; i++)
             {
@@ -125,7 +138,6 @@ namespace BabyMode
             if (string.IsNullOrEmpty(text))
             {
                 _locked = false;
-                User32.ClipCursor(IntPtr.Zero);
             }
         }
 
