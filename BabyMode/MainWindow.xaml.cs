@@ -23,6 +23,8 @@ namespace BabyMode
     public partial class MainWindow : Window
     {
         private IntPtr _handle;
+        private IntPtr _hookPtr;
+        private User32.HookProc _hookProc;
         private Random _random;
         private SpeechSynthesizer _speech;
         private Timer _timer;
@@ -35,6 +37,8 @@ namespace BabyMode
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             _handle = new WindowInteropHelper(this).Handle;
+            _hookProc = new User32.HookProc(Window_HookProc);
+            _hookPtr = IntPtr.Zero;
             _random = new Random();
             _speech = new SpeechSynthesizer();
             _timer = null;
@@ -43,8 +47,37 @@ namespace BabyMode
             Top = SystemParameters.WorkArea.Bottom - Height;
         }
 
+        public IntPtr Window_HookProc(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (wParam == (IntPtr)0x0100/*WM_KEYDOWN*/)
+            {
+                char c = User32.KeybdStructToAscii(lParam);
+
+                if (c != '\0')
+                {
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        Unlock(c);
+                    }));
+                }
+            }
+
+            if (nCode < 0)
+            {
+                return User32.CallNextHookEx(_hookPtr, nCode, wParam, lParam);
+            }
+
+            return (IntPtr)1;
+        }
+
         private void Window_Closed(object sender, EventArgs e)
         {
+            if (_hookPtr != IntPtr.Zero)
+            {
+                User32.UnhookWindowsHookEx(_hookPtr);
+                _hookPtr = IntPtr.Zero;
+            }
+
             if (_speech != null)
             {
                 _speech.Dispose();
@@ -58,48 +91,23 @@ namespace BabyMode
             }
         }
 
-        private void Window_TextInput(object sender, TextCompositionEventArgs e)
-        {
-            Button button;
-            Point point;
-
-            foreach (char c in e.Text)
-            {
-                if (c == '1') button = button1;
-                else if (c == '2') button = button2;
-                else if (c == '3') button = button3;
-                else if (c == '4') button = button4;
-                else if (c == '5') button = button5;
-                else if (c == '6') button = button6;
-                else if (c == '7') button = button7;
-                else if (c == '8') button = button8;
-                else if (c == '9') button = button9;
-                else if (c == '0') button = button0;
-                else button = null;
-
-                if (IsLocked() && button != null)
-                {
-                    point = new Point(button.Width / 2, button.Height / 2);
-                    point = button.PointToScreen(point);
-                    User32.SetCursorPos((int)point.X, (int)point.Y);
-                }
-
-                Unlock(c);
-            }
-        }
-
         private void Timer_Elapsed(object state)
         {
             if (User32.GetWindowRect(_handle, out User32.RECT rect))
             {
                 User32.ClipCursor(ref rect);
-                User32.SetForegroundWindow(_handle);
             }
         }
 
         private void Lock()
         {
             string text = string.Empty;
+
+            if (_hookPtr == IntPtr.Zero)
+            {
+                _hookPtr = User32.SetWindowsHookEx(13/*WH_KEYBOARD_LL*/, _hookProc,
+                    User32.GetModuleHandle(null), 0);
+            }
 
             if (_timer == null)
             {
@@ -137,6 +145,12 @@ namespace BabyMode
 
             if (!IsLocked())
             {
+                if (_hookPtr != IntPtr.Zero)
+                {
+                    User32.UnhookWindowsHookEx(_hookPtr);
+                    _hookPtr = IntPtr.Zero;
+                }
+
                 if (_timer != null)
                 {
                     _timer.Dispose();

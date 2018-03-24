@@ -10,7 +10,6 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         SizeToContent="WidthAndHeight"
-        TextInput="Window_TextInput"
         Topmost="True"
         WindowStyle="None"
         mc:Ignorable="d">
