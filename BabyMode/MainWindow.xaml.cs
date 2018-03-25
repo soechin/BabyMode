@@ -47,6 +47,8 @@ namespace BabyMode
 
             Left = SystemParameters.WorkArea.Right - Width;
             Top = SystemParameters.WorkArea.Bottom - Height;
+
+            Lock();
         }
 
         private void Window_Closed(object sender, EventArgs e)
