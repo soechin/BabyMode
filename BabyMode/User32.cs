@@ -55,6 +55,9 @@ namespace System
         public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
+        public static extern short GetAsyncKeyState(int vKey);
+
+        [DllImport("user32.dll")]
         public static extern bool GetKeyboardState(byte[] lpKeyState);
 
         [DllImport("user32.dll")]

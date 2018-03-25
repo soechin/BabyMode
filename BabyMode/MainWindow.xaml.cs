@@ -22,6 +22,7 @@ namespace BabyMode
     public partial class MainWindow : Window
     {
         private bool _locked;
+        private bool _shift;
         private IntPtr _handle;
         private IntPtr _hookPtr;
         private User32.HookProc _hookProc;
@@ -36,6 +37,7 @@ namespace BabyMode
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             _locked = false;
+            _shift = false;
             _handle = new WindowInteropHelper(this).Handle;
             _hookProc = new User32.HookProc(Window_HookProc);
             _hookPtr = User32.SetWindowsHookEx(13/*WH_KEYBOARD_LL*/, _hookProc,
@@ -64,17 +66,7 @@ namespace BabyMode
 
         private void Window_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_locked)
-            {
-                if (User32.GetWindowRect(_handle, out User32.RECT rect))
-                {
-                    User32.ClipCursor(ref rect);
-                }
-            }
-            else
-            {
-                User32.ClipCursor(IntPtr.Zero);
-            }
+            MouseClip(_locked && !_shift);
         }
 
         public IntPtr Window_HookProc(int nCode, IntPtr wParam, IntPtr lParam)
@@ -96,12 +88,29 @@ namespace BabyMode
                 {
                     skip = true;
                 }
+                else if (vkcode == 0xa0/*VK_LSHIFT*/ || vkcode == 0xa1/*VK_RSHIFT*/)
+                {
+                    _shift = true;
+                }
                 else if (ascii != 0)
                 {
                     Dispatcher.Invoke(new Action(() =>
                     {
-                        Input((char)ascii);
+                        KeybdInput((char)ascii);
                     }));
+                }
+            }
+            else if (wParam == (IntPtr)0x0101/*WM_KEYUP*/)
+            {
+                int ascii = User32.KeybdGetAscii(lParam, out int vkcode);
+
+                if (!_locked)
+                {
+                    skip = true;
+                }
+                else if (vkcode == 0xa0/*VK_LSHIFT*/ || vkcode == 0xa1/*VK_RSHIFT*/)
+                {
+                    _shift = false;
                 }
             }
             else if (!_locked)
@@ -121,7 +130,7 @@ namespace BabyMode
         {
             string text = string.Empty;
 
-            _locked = true;
+            MouseClip(_locked = true);
 
             for (int i = 0; i < 4; i++)
             {
@@ -137,18 +146,18 @@ namespace BabyMode
 
             if (string.IsNullOrEmpty(text))
             {
-                _locked = false;
+                MouseClip(_locked = false);
             }
         }
 
-        public void Input(char c)
+        public void KeybdInput(char c)
         {
             string text = label.Content as string;
 
-            //if (!_locked)
-            //{
-            //    return;
-            //}
+            if (!_locked)
+            {
+                return;
+            }
 
             if (_speech != null)
             {
@@ -170,6 +179,26 @@ namespace BabyMode
             }
         }
 
+        public void MouseClip(bool clip)
+        {
+            if (clip)
+            {
+                if (User32.GetWindowRect(_handle, out User32.RECT rect))
+                {
+                    rect.Left += 5;
+                    rect.Top += 5;
+                    rect.Right -= 5;
+                    rect.Bottom -= 5;
+
+                    User32.ClipCursor(ref rect);
+                }
+            }
+            else
+            {
+                User32.ClipCursor(IntPtr.Zero);
+            }
+        }
+
         private void ButtonL_Click(object sender, RoutedEventArgs e)
         {
             Lock();
@@ -185,52 +214,52 @@ namespace BabyMode
 
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
-            Input('1');
+            KeybdInput('1');
         }
 
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
-            Input('2');
+            KeybdInput('2');
         }
 
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
-            Input('3');
+            KeybdInput('3');
         }
 
         private void Button4_Click(object sender, RoutedEventArgs e)
         {
-            Input('4');
+            KeybdInput('4');
         }
 
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
-            Input('5');
+            KeybdInput('5');
         }
 
         private void Button6_Click(object sender, RoutedEventArgs e)
         {
-            Input('6');
+            KeybdInput('6');
         }
 
         private void Button7_Click(object sender, RoutedEventArgs e)
         {
-            Input('7');
+            KeybdInput('7');
         }
 
         private void Button8_Click(object sender, RoutedEventArgs e)
         {
-            Input('8');
+            KeybdInput('8');
         }
 
         private void Button9_Click(object sender, RoutedEventArgs e)
         {
-            Input('9');
+            KeybdInput('9');
         }
 
         private void Button0_Click(object sender, RoutedEventArgs e)
         {
-            Input('0');
+            KeybdInput('0');
         }
     }
 }
